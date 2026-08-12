@@ -1,6 +1,7 @@
 # Enterprise pilot release checklist
 
 - [ ] Main CI test, PostgreSQL, container and full Compose smoke jobs pass on the release commit.
+- [ ] GitHub `main` protection still enforces strict `test`, `postgres`, `container`, `compose-smoke` and `analyze` checks for administrators, with force-push and deletion disabled.
 - [ ] `auditmesh-operations preflight` returns `valid: true` using the exact production runtime identity and secret bindings.
 - [ ] Control owners approve policy definitions, severity and SLA calendars.
 - [ ] Every source connector has an authenticated identity, replay plan and count reconciliation.
