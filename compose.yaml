@@ -3,28 +3,57 @@ services:
     image: postgres:17.6-alpine
     environment:
       POSTGRES_DB: auditmesh
-      POSTGRES_USER: auditmesh
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
-    volumes: [auditmesh-db:/var/lib/postgresql/data]
-    healthcheck: {test: [CMD-SHELL, pg_isready -U auditmesh], interval: 5s, timeout: 3s, retries: 20}
+      POSTGRES_USER: auditmesh_owner
+      POSTGRES_PASSWORD: ${POSTGRES_OWNER_PASSWORD:?set POSTGRES_OWNER_PASSWORD}
+      APP_DB_USER: auditmesh_app
+      APP_DB_PASSWORD: ${POSTGRES_APP_PASSWORD:?set POSTGRES_APP_PASSWORD}
+    volumes:
+      - auditmesh-db:/var/lib/postgresql/data
+      - ./deploy/postgres/init-runtime-role.sh:/docker-entrypoint-initdb.d/10-runtime-role.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U auditmesh_owner -d auditmesh"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     restart: unless-stopped
+
+  migrate:
+    build: .
+    environment:
+      AUDITMESH_DATABASE_URL: postgresql+psycopg://auditmesh_owner:${POSTGRES_OWNER_PASSWORD}@postgres:5432/auditmesh
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: "no"
+
   api:
     build: .
     environment:
-      AUDITMESH_DATABASE_URL: postgresql+psycopg://auditmesh:${POSTGRES_PASSWORD}@postgres:5432/auditmesh
-      AUDITMESH_AUTH_MODE: ${AUDITMESH_AUTH_MODE:-oidc}
+      AUDITMESH_DATABASE_URL: postgresql+psycopg://auditmesh_app:${POSTGRES_APP_PASSWORD}@postgres:5432/auditmesh
+      AUDITMESH_AUTH_MODE: oidc
       AUDITMESH_JWT_ISSUER: ${AUDITMESH_JWT_ISSUER:?set OIDC issuer}
       AUDITMESH_JWT_AUDIENCE: ${AUDITMESH_JWT_AUDIENCE:-auditmesh-api}
       AUDITMESH_OIDC_JWKS_URL: ${AUDITMESH_OIDC_JWKS_URL:?set OIDC JWKS URL}
-      AUDITMESH_JWT_SECRET: ${AUDITMESH_JWT_SECRET:-}
-      AUDITMESH_ALLOW_HMAC_PRODUCTION: ${AUDITMESH_ALLOW_HMAC_PRODUCTION:-false}
+      AUDITMESH_JWT_SECRET: ""
+      AUDITMESH_ALLOW_HMAC_PRODUCTION: "false"
+      AUDITMESH_AUTO_CREATE_SCHEMA: "false"
+      AUDITMESH_BACKUP_KEY_BASE64: ${AUDITMESH_BACKUP_KEY_BASE64:?set base64 32-byte backup key}
       AUDITMESH_ENV: production
-    depends_on: {postgres: {condition: service_healthy}}
-    command: ["sh","-c","alembic upgrade head && exec uvicorn auditmesh.api:create_app --factory --host 0.0.0.0 --port 8000"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: ["sh", "-c", "auditmesh-operations preflight && exec uvicorn auditmesh.api:create_app --factory --host 0.0.0.0 --port 8000"]
     ports: ["127.0.0.1:8082:8000"]
     read_only: true
     tmpfs: [/tmp]
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     restart: unless-stopped
-volumes: {auditmesh-db: {}}
+
+volumes:
+  auditmesh-db:

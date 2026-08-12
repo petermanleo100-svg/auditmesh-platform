@@ -9,10 +9,12 @@
 
 ## Startup and acceptance
 
-1. Supply environment secrets and run `docker compose up -d --build`.
-2. Gate traffic on `/health/ready` and monitor `/metrics`.
-3. Test event idempotency, cross-tenant isolation, SLA calculation, optimistic concurrency and independent closure.
-4. Reconcile source-system event counts to accepted events and rejected/dead-letter records before sign-off.
+1. Supply environment secrets and distinct migration-owner/runtime credentials. For local Compose, use a fresh volume because runtime-role bootstrap runs only on initial database creation.
+2. Run `auditmesh-operations preflight` as the runtime identity and require secret-free `valid: true` JSON.
+3. Run `docker compose up -d --build`; Compose migrates as the owner and repeats preflight before the API starts.
+4. Gate traffic on `/health/ready` and monitor `/metrics`.
+5. Test event idempotency, cross-tenant isolation, SLA calculation, optimistic concurrency and independent closure.
+6. Reconcile source-system event counts to accepted events and rejected/dead-letter records before sign-off.
 
 ## Operational objectives
 

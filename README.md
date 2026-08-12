@@ -21,7 +21,7 @@ pytest -q
 uvicorn auditmesh.api:create_app --factory --port 8000
 ```
 
-企业试点使用 `.env.example`、`compose.yaml` 和 `docs/production-runbook.md`；CI 验证迁移往返、PostgreSQL 并发幂等/RLS 隔离/加密恢复、API 权限边界和非 root 容器。
+企业试点使用 `.env.example`、`compose.yaml` 和 `docs/production-runbook.md`；迁移所有者与请求运行账号严格分离，API 启动前执行数据库角色、精确 Alembic 版本、强制 RLS、OIDC 与备份密钥准入检查。CI 验证迁移往返、PostgreSQL 并发幂等/RLS 隔离/加密恢复、API 权限边界、非 root 容器和完整 Compose 启动。
 
 运维入口：`auditmesh-operations backup-create <path>`、`backup-restore <path> --target-url <url>` 与 `evidence-verify [--tenant ...]`。
 

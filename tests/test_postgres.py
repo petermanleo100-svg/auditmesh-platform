@@ -13,7 +13,9 @@ from auditmesh.backup import create_backup, restore_backup
 from auditmesh.core import Database
 from auditmesh.integrity import verify_evidence
 from auditmesh.models import AuditCase, ControlEvent
+from auditmesh.preflight import PreflightError, run_preflight
 from auditmesh.service import AuditMeshService
+from auditmesh.settings import Settings
 
 
 URL = os.getenv("TEST_POSTGRES_URL")
@@ -120,3 +122,27 @@ def test_postgres_encrypted_backup_restores_to_clean_schema(postgres_db, tmp_pat
         target.engine.dispose()
         with postgres_db.engine.begin() as conn:
             conn.execute(text("DROP SCHEMA recovery_target CASCADE"))
+
+
+def test_production_preflight_accepts_runtime_role_and_rejects_owner(postgres_db):
+    admin = create_engine(URL, isolation_level="AUTOCOMMIT")
+    with admin.connect() as conn:
+        conn.execute(text("DROP ROLE IF EXISTS auditmesh_preflight"))
+        conn.execute(text("CREATE ROLE auditmesh_preflight LOGIN PASSWORD 'preflight-password' NOSUPERUSER NOBYPASSRLS"))
+        conn.execute(text("GRANT CONNECT ON DATABASE auditmesh TO auditmesh_preflight"))
+        conn.execute(text("GRANT USAGE ON SCHEMA public TO auditmesh_preflight"))
+        conn.execute(text("GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO auditmesh_preflight"))
+        conn.execute(text("GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO auditmesh_preflight"))
+    runtime_url = URL.replace("auditmesh:auditmesh@", "auditmesh_preflight:preflight-password@")
+    settings = Settings(runtime_url, "", "https://id.example", "auditmesh-api", "production", False, "oidc", "https://id.example/jwks", False)
+    try:
+        result = run_preflight(settings, BACKUP_KEY)
+        assert result["valid"] and result["database"]["user"] == "auditmesh_preflight"
+        owner_settings = Settings(URL, "", "https://id.example", "auditmesh-api", "production", False, "oidc", "https://id.example/jwks", False)
+        with pytest.raises(PreflightError, match="superuser"):
+            run_preflight(owner_settings, BACKUP_KEY)
+    finally:
+        with admin.connect() as conn:
+            conn.execute(text("DROP OWNED BY auditmesh_preflight"))
+            conn.execute(text("DROP ROLE auditmesh_preflight"))
+        admin.dispose()
