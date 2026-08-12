@@ -6,7 +6,7 @@
 - [ ] Control owners approve policy definitions, severity and SLA calendars.
 - [ ] Every source connector has an authenticated identity, replay plan and count reconciliation.
 - [ ] Security approves identity claims, secrets, TLS, ingress controls and database roles.
-- [ ] Migration/rollback and backup/restore rehearsals pass in a production-like environment.
+- [ ] PostgreSQL isolated-schema latest-revision rollback/re-upgrade CI passes with business-row preservation and restored forced RLS; repeat migration rollback and backup restore against the production-like staging copy.
 - [ ] Runtime database role is non-owner/NOBYPASSRLS and direct SQL RLS attacks are rejected.
 - [ ] Cross-tenant attacks, 24-way duplicate delivery, concurrent transitions and self-closure gates pass.
 - [ ] Critical overdue, readiness, ingestion error and source-gap alerts reach named owners.
