@@ -1,0 +1,21 @@
+from datetime import datetime,timedelta,timezone
+import pytest
+from fastapi.testclient import TestClient
+from auditmesh.api import create_app
+from auditmesh.core import Database
+from auditmesh.service import AuditMeshService
+def event(event_id="E1"): return {"event_id":event_id,"event_type":"PRIVILEGED_ACTION","actor":"root","resource":"production","occurred_at":datetime.now(timezone.utc).isoformat(),"approved":False,"payload":{}}
+def test_policy_event_idempotency_and_case_lifecycle(tmp_path):
+ db=Database(tmp_path/"mesh.db");db.initialize();s=AuditMeshService(db,"alpha");assert s.install_policies()==3
+ cases=s.ingest(event());assert len(cases)==1 and s.ingest(event())[0]["policy_code"]=="PRIVILEGED_AFTER_HOURS"
+ case_id=cases[0]["case_id"];s.transition(case_id,"auditor","INVESTIGATING","triage");s.transition(case_id,"root","REMEDIATED","fixed")
+ with pytest.raises(ValueError,match="independent"):s.transition(case_id,"root","CLOSED","self close")
+ assert s.transition(case_id,"auditor","CLOSED","verified")["status"]=="CLOSED"
+def test_sla_overdue_and_tenant_isolation(tmp_path):
+ db=Database(tmp_path/"sla.db");db.initialize();a=AuditMeshService(db,"alpha");a.install_policies();a.ingest(event())
+ future=(datetime.now(timezone.utc)+timedelta(days=1)).isoformat();assert len(a.overdue(future))==1;assert AuditMeshService(db,"beta").overdue(future)==[]
+def test_api_workflow(tmp_path):
+ c=TestClient(create_app(str(tmp_path/"api.db")));h={"X-Tenant-ID":"alpha"}
+ assert c.post("/policies/defaults",headers=h).status_code==201
+ response=c.post("/events",json=event(),headers=h);assert response.status_code==201 and len(response.json()["cases"])==1
+ assert c.get("/health/ready").json()["status"]=="ready"
