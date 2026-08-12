@@ -10,3 +10,6 @@
 | Operations | request ID, metrics, probes and security headers test |
 | Schema lifecycle | Alembic upgrade/downgrade round-trip test |
 | Enterprise pilot | hardened PostgreSQL Compose, runbook and CI jobs |
+| Database tenant defense | PostgreSQL FORCE RLS and transaction tenant context; direct SQL attack test |
+| Verifiable evidence | canonical raw event retained; recomputation detects mutation |
+| Backup and recovery | AES-256-GCM, empty-target restore and restored evidence verification tests |

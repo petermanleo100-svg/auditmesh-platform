@@ -6,7 +6,8 @@ class ControlEvent(Base):
     tenant_id:Mapped[str]=mapped_column(String(64),nullable=False,index=True); event_id:Mapped[str]=mapped_column(String(100),nullable=False)
     event_type:Mapped[str]=mapped_column(String(50),nullable=False); actor:Mapped[str]=mapped_column(String(100),nullable=False)
     resource:Mapped[str]=mapped_column(String(100),nullable=False); occurred_at:Mapped[str]=mapped_column(String(40),nullable=False)
-    payload_json:Mapped[str]=mapped_column(Text,nullable=False); evidence_hash:Mapped[str]=mapped_column(String(64),nullable=False)
+    payload_json:Mapped[str]=mapped_column(Text,nullable=False); raw_event_json:Mapped[str]=mapped_column(Text,nullable=False,default="{}")
+    evidence_hash:Mapped[str]=mapped_column(String(64),nullable=False)
     __table_args__=(UniqueConstraint("tenant_id","event_id"),)
 class ControlPolicy(Base):
     __tablename__="control_policies"; id:Mapped[int]=mapped_column(Integer,primary_key=True)

@@ -22,4 +22,8 @@
 
 During an incident, stop the affected collector, preserve raw evidence and database snapshots, revoke credentials, establish the last trusted event offset, replay idempotently into isolation, and require audit-owner approval before reopening case operations.
 
+Portable backups use `auditmesh.backup`, AES-256-GCM and a secret-manager supplied 32-byte base64 key. Restore only into an empty database; the restore gate recomputes every retained canonical raw-event hash. Managed PostgreSQL PITR remains mandatory and both restore paths should be rehearsed quarterly.
+
+The API database role must be `NOSUPERUSER NOBYPASSRLS` and must not own tables. A separate migration owner installs forced RLS. Each transaction sets `app.tenant_id`; direct SQL attack tests prove another tenant's rows remain invisible and unmodifiable.
+
 The repository supports an enterprise pilot. A production audit conclusion additionally requires customer policy approval, evidence-retention decisions, source connector certification and independent control-owner acceptance.
