@@ -103,7 +103,7 @@ def test_postgres_encrypted_backup_restores_to_clean_schema(postgres_db, tmp_pat
     target = Database(target_url.render_as_string(hide_password=False))
     try:
         environment = {**os.environ, "AUDITMESH_DATABASE_URL": target.url}
-        subprocess.run(
+        migration = subprocess.run(
             [sys.executable, "-m", "alembic", "upgrade", "head"],
             cwd=ROOT,
             env=environment,
@@ -111,6 +111,7 @@ def test_postgres_encrypted_backup_restores_to_clean_schema(postgres_db, tmp_pat
             capture_output=True,
             text=True,
         )
+        assert migration.returncode == 0
         restored = restore_backup(target, backup_path, BACKUP_KEY)
         assert restored["valid"] and restored["evidence_checked"] == 1
         with target.connect() as conn:
