@@ -10,6 +10,7 @@
 - JWT 审计角色权限、令牌租户绑定和严格输入校验。
 - PostgreSQL/Alembic、健康探针、请求追踪、安全响应头、Prometheus 指标与加固 Compose。
 - PostgreSQL 强制 RLS、AES-256-GCM 加密备份、空库恢复与逐事件证据哈希验证。
+- 2 MiB 请求限制、严格字段边界、统一数据库错误、结构化访问日志和管理员完整性接口。
 
 ```bash
 pip install -e ".[test]"
@@ -18,5 +19,7 @@ uvicorn auditmesh.api:create_app --factory --port 8000
 ```
 
 企业试点使用 `.env.example`、`compose.yaml` 和 `docs/production-runbook.md`；CI 验证迁移往返、PostgreSQL 幂等/隔离、API 权限边界和非 root 容器。
+
+运维入口：`auditmesh-operations backup-create <path>`、`backup-restore <path> --target-url <url>` 与 `evidence-verify [--tenant ...]`。
 
 所有事件均为合成测试数据，不代表真实客户审计或控制有效性结论。生产启用仍需客户策略审批、源连接器认证、留存决策与独立控制负责人验收。

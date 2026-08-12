@@ -6,6 +6,7 @@ from auditmesh.core import Database
 from auditmesh.service import AuditMeshService
 from auditmesh.security import issue_token
 from auditmesh.settings import Settings
+from sqlalchemy.exc import OperationalError
 def event(event_id="E1"): return {"event_id":event_id,"event_type":"PRIVILEGED_ACTION","actor":"root","resource":"production","occurred_at":datetime.now(timezone.utc).isoformat(),"approved":False,"payload":{}}
 def test_policy_event_idempotency_and_case_lifecycle(tmp_path):
  db=Database(tmp_path/"mesh.db");db.initialize();s=AuditMeshService(db,"alpha");assert s.install_policies()==3
@@ -29,3 +30,16 @@ def test_auth_tenant_binding_scopes_metrics_and_headers(tmp_path):
  assert c.post("/events",json=event()).status_code==401
  response=c.get("/health/live",headers={"X-Request-ID":"trace-456"});assert response.headers["x-request-id"]=="trace-456" and response.headers["x-frame-options"]=="DENY"
  assert "auditmesh_http_requests_total" in c.get("/metrics").text
+def test_resource_limits_validation_and_admin_integrity(tmp_path):
+ settings=Settings(str(tmp_path/"limits.db"),"test-secret-that-is-at-least-32-bytes",environment="test");c=TestClient(create_app(settings=settings,initialize=True))
+ def h(user,role):return {"Authorization":f"Bearer {issue_token(settings,user,'alpha',[role])}"}
+ c.post("/policies/defaults",headers=h("admin","admin"));assert c.post("/events",json=event(),headers=h("collector","collector")).status_code==201
+ assert c.get("/operations/integrity",headers=h("collector","collector")).status_code==403
+ assert c.get("/operations/integrity",headers=h("admin","admin")).json()["valid"] is True
+ invalid={**event("bad"),"event_id":"x"*101};assert c.post("/events",json=invalid,headers=h("collector","collector")).status_code==422
+ assert c.post("/events",content=b"x"*(2*1024*1024+1),headers={**h("collector","collector"),"Content-Type":"application/json"}).status_code==413
+def test_database_failures_are_sanitized(tmp_path,monkeypatch):
+ settings=Settings(str(tmp_path/"failure.db"),"test-secret-that-is-at-least-32-bytes",environment="test");app=create_app(settings=settings,initialize=True);c=TestClient(app)
+ def fail(*_args,**_kwargs):raise OperationalError("SELECT secret",{},RuntimeError("password=do-not-leak"))
+ monkeypatch.setattr(AuditMeshService,"ingest",fail);token=issue_token(settings,"collector","alpha",["collector"]);response=c.post("/events",json=event(),headers={"Authorization":f"Bearer {token}"})
+ assert response.status_code==503 and response.json()=={"detail":"database operation failed"} and "password" not in response.text

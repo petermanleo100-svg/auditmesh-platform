@@ -13,3 +13,6 @@
 | Database tenant defense | PostgreSQL FORCE RLS and transaction tenant context; direct SQL attack test |
 | Verifiable evidence | canonical raw event retained; recomputation detects mutation |
 | Backup and recovery | AES-256-GCM, empty-target restore and restored evidence verification tests |
+| Runtime abuse controls | 2 MiB body and bounded event/transition fields; oversize/invalid tests |
+| Safe failure boundary | centralized SQLAlchemy 503; injected database failure leak test |
+| Operability | structured request log, admin integrity API and operations CLI tests |

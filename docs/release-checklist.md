@@ -9,3 +9,5 @@
 - [ ] Cross-tenant attacks, duplicate events, concurrent transitions and self-closure are rejected.
 - [ ] Critical overdue, readiness, ingestion error and source-gap alerts reach named owners.
 - [ ] A synthetic case completes OPEN through independent CLOSED before real evidence is admitted.
+- [ ] Oversize/invalid events and injected database failures pass negative tests without detail leakage.
+- [ ] Scheduled `evidence-verify` and backup jobs use separate least-privileged operational identities.

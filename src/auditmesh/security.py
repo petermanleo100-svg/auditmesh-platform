@@ -4,7 +4,7 @@ import jwt
 from fastapi import Header,HTTPException
 from .settings import Settings
 
-ROLE_SCOPES={"viewer":{"case:read"},"collector":{"event:write","case:read"},"auditor":{"case:read","case:transition","policy:write"},"admin":{"event:write","case:read","case:transition","policy:write"}}
+ROLE_SCOPES={"viewer":{"case:read"},"collector":{"event:write","case:read"},"auditor":{"case:read","case:transition","policy:write"},"admin":{"event:write","case:read","case:transition","policy:write","integrity:verify"}}
 @dataclass(frozen=True)
 class Principal: subject:str; tenant_id:str; roles:tuple[str,...]; scopes:frozenset[str]
 def issue_token(settings,subject,tenant_id,roles,minutes=30):
