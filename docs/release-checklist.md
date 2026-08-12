@@ -3,7 +3,7 @@
 - [ ] Main CI test, PostgreSQL, container and full Compose smoke jobs pass on the release commit.
 - [ ] GitHub `main` protection still enforces strict `test`, `postgres`, `container`, `compose-smoke` and `analyze` checks for administrators, with force-push and deletion disabled.
 - [ ] `auditmesh-operations preflight` returns `valid: true` using the exact production runtime identity and secret bindings.
-- [ ] Complete `docs/admission-evidence.example.json` with durable evidence for the exact release SHA, then require `auditmesh-operations admission-verify <file> --release-sha <sha>` to return `valid: true`; evidence older than seven days must be renewed.
+- [ ] Complete schema-v2 `docs/admission-evidence.example.json` with the deployer, a different verifier, durable URI and independently calculated SHA-256 for every exact-release control; require `auditmesh-operations admission-verify <file> --release-sha <sha>` to return `valid: true`. Evidence older than seven days cannot be overridden and must be renewed.
 - [ ] Control owners approve policy definitions, severity and SLA calendars.
 - [ ] Every source connector has an authenticated identity, replay plan and count reconciliation.
 - [ ] Security approves identity claims, secrets, TLS, ingress controls and database roles.
