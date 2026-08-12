@@ -28,6 +28,8 @@ Portable backups use `auditmesh.backup`, AES-256-GCM and a secret-manager suppli
 
 PostgreSQL event intake uses the `(tenant_id, event_id)` unique key with a database-native conflict path. Concurrent retries for the same event return the same case rather than surfacing a uniqueness failure; source connectors must preserve a stable event ID across retries.
 
+Before approving a release, an administrator must run `GH_TOKEN=$(gh auth token) GITHUB_REPOSITORY=petermanleo100-svg/auditmesh-platform EXPECTED_REQUIRED_CHECKS=test,postgres,container,compose-smoke,analyze python scripts/verify_github_governance.py`. The verifier fails unless `main` protection, GitHub-Actions-bound checks, secret scanning/push protection and Dependabot security controls match the documented state. It intentionally runs outside Actions because the default workflow token cannot read administration settings; no broad administrator PAT is stored in Actions.
+
 Use `auditmesh-operations` for backup, restore and evidence verification; schedule `evidence-verify` and page on non-zero exit. The API rejects bodies over 2 MiB and bounds identity/control fields. Structured JSON access logs carry the response request ID for trace correlation.
 
 Load `deploy/prometheus/auditmesh-alerts.yml` into the approved Prometheus-compatible backend and route critical/warning severities to named owners. CI validates rule syntax with `promtool`; notification delivery remains an environment acceptance test. Container CI retains an SPDX JSON SBOM for 30 days and blocks vulnerabilities that are both Critical and have a known fix. Unfixed findings require explicit release risk review.
