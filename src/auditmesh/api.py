@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from .core import Database
 from .service import AuditMeshService
 from .settings import Settings
-from .security import Principal,authenticate,require
+from .security import Principal,authenticate,require,build_verifier
 from .observability import OperationsMiddleware,metrics_response
 from .integrity import verify_evidence
 class EventIn(BaseModel):
@@ -18,10 +18,11 @@ def create_app(database=None,settings:Settings|None=None,initialize:bool|None=No
  settings=settings or (Settings.from_env() if database is None else Settings(str(database),"test-secret-that-is-at-least-32-bytes"));db=Database(database or settings.database_url)
  if initialize is True or (initialize is None and (database is not None or settings.auto_create_schema)): db.initialize()
  app=FastAPI(title="AuditMesh Platform",version="1.0.0",docs_url="/docs" if settings.environment!="production" else None);app.add_middleware(OperationsMiddleware)
+ verifier=build_verifier(settings)
  @app.exception_handler(SQLAlchemyError)
  async def database_error(_request,_exc):
   return JSONResponse(status_code=503,content={"detail":"database operation failed"})
- def current(authorization:str|None=Header(default=None)): return authenticate(settings,authorization)
+ def current(authorization:str|None=Header(default=None)): return authenticate(settings,authorization,verifier)
  def svc(actor): return AuditMeshService(db,actor.tenant_id)
  @app.post("/policies/defaults",status_code=201)
  def policies(actor:Principal=Depends(current)): require(actor,"policy:write");return {"installed":svc(actor).install_policies()}

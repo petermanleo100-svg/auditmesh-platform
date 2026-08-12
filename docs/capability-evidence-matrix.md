@@ -16,3 +16,5 @@
 | Runtime abuse controls | 2 MiB body and bounded event/transition fields; oversize/invalid tests |
 | Safe failure boundary | centralized SQLAlchemy 503; injected database failure leak test |
 | Operability | structured request log, admin integrity API and operations CLI tests |
+| Enterprise identity | OIDC/JWKS RS256/ES256, issuer/audience/expiry/role/tenant validation and 5-minute key cache; negative matrix |
+| Auth downgrade control | production defaults OIDC; HMAC requires explicit exception; fail-closed settings tests |

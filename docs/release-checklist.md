@@ -11,3 +11,4 @@
 - [ ] A synthetic case completes OPEN through independent CLOSED before real evidence is admitted.
 - [ ] Oversize/invalid events and injected database failures pass negative tests without detail leakage.
 - [ ] Scheduled `evidence-verify` and backup jobs use separate least-privileged operational identities.
+- [ ] OIDC issuer/audience/roles/tenant mappings and signing-key rotation are tested; no unapproved HMAC exception remains.

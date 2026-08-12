@@ -28,4 +28,6 @@ Use `auditmesh-operations` for backup, restore and evidence verification; schedu
 
 The API database role must be `NOSUPERUSER NOBYPASSRLS` and must not own tables. A separate migration owner installs forced RLS. Each transaction sets `app.tenant_id`; direct SQL attack tests prove another tenant's rows remain invisible and unmodifiable.
 
+Production authentication defaults to `AUDITMESH_AUTH_MODE=oidc`; configure an HTTPS issuer/JWKS endpoint and exact audience. `kid`-selected signing keys cache for five minutes. HMAC is a controlled pilot exception requiring `AUDITMESH_ALLOW_HMAC_PRODUCTION=true`, a named risk owner and expiry date.
+
 The repository supports an enterprise pilot. A production audit conclusion additionally requires customer policy approval, evidence-retention decisions, source connector certification and independent control-owner acceptance.

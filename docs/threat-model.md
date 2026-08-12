@@ -8,5 +8,6 @@
 | Case history | concurrent/invalid transition | legal state machine, optimistic version and transition log | retention and immutable backup |
 | SLA operations | missed critical case | severity deadlines and overdue queue | paging route, calendar policy and staffing |
 | Availability | source gap or database outage | readiness/metrics/runbook | source heartbeat, HA database and restore drill |
+| Identity federation | forged token, stale key or downgrade | OIDC/JWKS algorithm allowlist and strict claims; explicit HMAC exception | IdP group/claim governance and rotation drill |
 
 Residual risk: production audit reliance requires source connector certification, policy-owner approval, immutable retention and database defense-in-depth beyond the application predicates.

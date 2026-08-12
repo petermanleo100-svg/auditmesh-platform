@@ -12,7 +12,12 @@ services:
     build: .
     environment:
       AUDITMESH_DATABASE_URL: postgresql+psycopg://auditmesh:${POSTGRES_PASSWORD}@postgres:5432/auditmesh
-      AUDITMESH_JWT_SECRET: ${AUDITMESH_JWT_SECRET:?set AUDITMESH_JWT_SECRET}
+      AUDITMESH_AUTH_MODE: ${AUDITMESH_AUTH_MODE:-oidc}
+      AUDITMESH_JWT_ISSUER: ${AUDITMESH_JWT_ISSUER:?set OIDC issuer}
+      AUDITMESH_JWT_AUDIENCE: ${AUDITMESH_JWT_AUDIENCE:-auditmesh-api}
+      AUDITMESH_OIDC_JWKS_URL: ${AUDITMESH_OIDC_JWKS_URL:?set OIDC JWKS URL}
+      AUDITMESH_JWT_SECRET: ${AUDITMESH_JWT_SECRET:-}
+      AUDITMESH_ALLOW_HMAC_PRODUCTION: ${AUDITMESH_ALLOW_HMAC_PRODUCTION:-false}
       AUDITMESH_ENV: production
     depends_on: {postgres: {condition: service_healthy}}
     command: ["sh","-c","alembic upgrade head && exec uvicorn auditmesh.api:create_app --factory --host 0.0.0.0 --port 8000"]
