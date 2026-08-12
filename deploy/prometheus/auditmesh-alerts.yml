@@ -36,6 +36,11 @@ groups:
         for: 5m
         labels: {severity: critical, service: auditmesh, owner: platform-operations}
         annotations: {summary: "AuditMesh scheduled operation failed", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
+      - alert: AuditMeshTextfileCollectorFailed
+        expr: node_textfile_scrape_error == 1
+        for: 5m
+        labels: {severity: critical, service: auditmesh, owner: platform-operations}
+        annotations: {summary: "AuditMesh operation metrics collector cannot read one or more textfiles", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
       - alert: AuditMeshBackupStale
         expr: (time() - auditmesh_operation_last_success_timestamp_seconds{operation="backup_create"} > 900) or absent(auditmesh_operation_last_success_timestamp_seconds{operation="backup_create"})
         for: 5m
