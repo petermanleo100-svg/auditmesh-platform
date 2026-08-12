@@ -6,19 +6,28 @@ groups:
         for: 10m
         labels:
           severity: critical
+          service: auditmesh
+          owner: platform-operations
         annotations:
           summary: AuditMesh API 5xx rate exceeds 1%
+          runbook_url: https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md
       - alert: AuditMeshP95LatencyHigh
         expr: histogram_quantile(0.95, sum by (le) (rate(auditmesh_http_request_duration_seconds_bucket[10m]))) > 1
         for: 15m
         labels:
           severity: warning
+          service: auditmesh
+          owner: platform-operations
         annotations:
           summary: AuditMesh API p95 latency exceeds one second
+          runbook_url: https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md
       - alert: AuditMeshReadinessUnavailable
         expr: probe_success{job="auditmesh-readiness"} == 0
         for: 2m
         labels:
           severity: critical
+          service: auditmesh
+          owner: platform-operations
         annotations:
           summary: AuditMesh readiness probe is unavailable
+          runbook_url: https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md

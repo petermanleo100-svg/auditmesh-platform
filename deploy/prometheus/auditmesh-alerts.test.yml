@@ -1,0 +1,36 @@
+rule_files: [auditmesh-alerts.yml]
+evaluation_interval: 1m
+tests:
+  - name: auditmesh-api-alerts-fire-after-sustained-breach
+    interval: 1m
+    input_series:
+      - series: 'auditmesh_http_requests_total{status="200"}'
+        values: '0+100x20'
+      - series: 'auditmesh_http_requests_total{status="500"}'
+        values: '0+5x20'
+      - series: 'auditmesh_http_request_duration_seconds_bucket{le="0.5"}'
+        values: '0+10x20'
+      - series: 'auditmesh_http_request_duration_seconds_bucket{le="1"}'
+        values: '0+20x20'
+      - series: 'auditmesh_http_request_duration_seconds_bucket{le="2"}'
+        values: '0+100x20'
+      - series: 'auditmesh_http_request_duration_seconds_bucket{le="+Inf"}'
+        values: '0+100x20'
+      - series: 'probe_success{job="auditmesh-readiness"}'
+        values: '0+0x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: AuditMeshHighErrorRate
+        exp_alerts:
+          - exp_labels: {severity: critical, service: auditmesh, owner: platform-operations}
+            exp_annotations: {summary: "AuditMesh API 5xx rate exceeds 1%", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
+      - eval_time: 16m
+        alertname: AuditMeshP95LatencyHigh
+        exp_alerts:
+          - exp_labels: {severity: warning, service: auditmesh, owner: platform-operations}
+            exp_annotations: {summary: "AuditMesh API p95 latency exceeds one second", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
+      - eval_time: 16m
+        alertname: AuditMeshReadinessUnavailable
+        exp_alerts:
+          - exp_labels: {severity: critical, service: auditmesh, owner: platform-operations, job: auditmesh-readiness}
+            exp_annotations: {summary: "AuditMesh readiness probe is unavailable", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
