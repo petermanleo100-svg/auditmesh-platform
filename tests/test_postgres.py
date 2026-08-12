@@ -12,7 +12,7 @@ from sqlalchemy.engine import make_url
 from auditmesh.backup import create_backup, restore_backup
 from auditmesh.core import Database
 from auditmesh.integrity import verify_evidence
-from auditmesh.models import AuditCase, ControlEvent
+from auditmesh.models import AuditCase, ControlEvent, SourceContract
 from auditmesh.preflight import PreflightError, run_preflight
 from auditmesh.service import AuditMeshService
 from auditmesh.settings import Settings
@@ -41,7 +41,7 @@ def postgres_db():
     db = Database(URL)
     db.initialize()
     with db.connect() as conn:
-        for table in ("case_transitions", "audit_cases", "control_events", "control_policies"):
+        for table in ("case_transitions", "audit_cases", "control_events", "control_policies", "source_contracts"):
             conn.execute(text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE"))
     yield db
     db.engine.dispose()
@@ -66,6 +66,8 @@ def test_postgres_concurrent_duplicate_ingestion_is_atomic(postgres_db):
 def test_postgres_rls_blocks_direct_cross_tenant_sql(postgres_db):
     AuditMeshService(postgres_db, "alpha").ingest(event("RLS-A", "alpha"))
     AuditMeshService(postgres_db, "beta").ingest(event("RLS-B", "beta"))
+    AuditMeshService(postgres_db,"alpha").register_source("erp","alpha-collector",300)
+    AuditMeshService(postgres_db,"beta").register_source("erp","beta-collector",300)
     admin = create_engine(URL, isolation_level="AUTOCOMMIT")
     with admin.connect() as conn:
         conn.execute(text("DROP ROLE IF EXISTS auditmesh_runtime"))
@@ -82,6 +84,8 @@ def test_postgres_rls_blocks_direct_cross_tenant_sql(postgres_db):
             conn.execute(text("SELECT set_config('app.tenant_id','beta',true)"))
             assert conn.execute(text("SELECT count(*) FROM control_events")).scalar_one() == 1
             assert conn.execute(text("UPDATE control_events SET actor='attacker' WHERE tenant_id='alpha'")).rowcount == 0
+            assert conn.execute(text("SELECT count(*) FROM source_contracts")).scalar_one()==1
+            assert conn.execute(text("UPDATE source_contracts SET principal_subject='attacker' WHERE tenant_id='alpha'")).rowcount==0
     finally:
         runtime.dispose()
         with admin.connect() as conn:
@@ -137,20 +141,32 @@ def test_postgres_latest_migration_rollback_preserves_business_data(postgres_db)
         service.install_policies()
         service.ingest(event("PG-ROLLBACK", "rollback"))
         target.engine.dispose()
-        subprocess.run([sys.executable, "-m", "alembic", "downgrade", "20260812_0002"], cwd=ROOT, env=environment, check=True)
+        subprocess.run([sys.executable, "-m", "alembic", "downgrade", "20260812_0003"], cwd=ROOT, env=environment, check=True)
         with target.engine.connect() as conn:
             assert conn.execute(text("SELECT count(*) FROM control_events WHERE event_id='PG-ROLLBACK'")).scalar_one() == 1
-            assert not conn.execute(text("SELECT relrowsecurity FROM pg_class WHERE relname='control_events' AND relnamespace='rollback_target'::regnamespace")).scalar_one()
+            assert conn.execute(text("SELECT to_regclass('rollback_target.source_contracts')")).scalar_one() is None
         target.engine.dispose()
         subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], cwd=ROOT, env=environment, check=True)
         with target.engine.connect() as conn:
             assert conn.execute(text("SELECT count(*) FROM control_events WHERE event_id='PG-ROLLBACK'")).scalar_one() == 1
             state = conn.execute(text("SELECT relrowsecurity, relforcerowsecurity FROM pg_class WHERE relname='control_events' AND relnamespace='rollback_target'::regnamespace")).one()
             assert state == (True, True)
+            source_state=conn.execute(text("SELECT relrowsecurity, relforcerowsecurity FROM pg_class WHERE relname='source_contracts' AND relnamespace='rollback_target'::regnamespace")).one();assert source_state==(True,True)
     finally:
         target.engine.dispose()
         with postgres_db.engine.begin() as conn:
             conn.execute(text("DROP SCHEMA rollback_target CASCADE"))
+
+def test_source_contract_migration_refuses_destructive_downgrade(postgres_db):
+    with postgres_db.engine.begin() as conn:conn.execute(text("DROP SCHEMA IF EXISTS source_rollback CASCADE"));conn.execute(text("CREATE SCHEMA source_rollback"))
+    target_url=make_url(URL).set(query={"options":"-csearch_path=source_rollback"});environment={**os.environ,"AUDITMESH_DATABASE_URL":target_url.render_as_string(hide_password=False)}
+    try:
+        subprocess.run([sys.executable,"-m","alembic","upgrade","head"],cwd=ROOT,env=environment,check=True)
+        target=Database(environment["AUDITMESH_DATABASE_URL"]);AuditMeshService(target,"alpha").register_source("erp","collector-alpha",300);target.engine.dispose()
+        result=subprocess.run([sys.executable,"-m","alembic","downgrade","20260812_0003"],cwd=ROOT,env=environment,capture_output=True,text=True)
+        assert result.returncode!=0 and "cannot downgrade source_contracts" in (result.stdout+result.stderr)
+    finally:
+        with postgres_db.engine.begin() as conn:conn.execute(text("DROP SCHEMA source_rollback CASCADE"))
 
 
 def test_production_preflight_accepts_runtime_role_and_rejects_owner(postgres_db):

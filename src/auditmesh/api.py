@@ -14,6 +14,12 @@ class EventIn(BaseModel):
 class TransitionIn(BaseModel):
  model_config=ConfigDict(extra="forbid")
  target:str=Field(pattern="^(INVESTIGATING|REMEDIATED|CLOSED)$");reason:str=Field(min_length=3,max_length=2000)
+class SourceContractIn(BaseModel):
+ model_config=ConfigDict(extra="forbid")
+ principal_subject:str=Field(min_length=1,max_length=200);max_silence_seconds:int=Field(ge=60,le=604800);enabled:bool=True
+class SourceResultIn(BaseModel):
+ model_config=ConfigDict(extra="forbid")
+ success:bool;error_code:str|None=Field(default=None,pattern="^[A-Z0-9_]{1,50}$")
 def create_app(database=None,settings:Settings|None=None,initialize:bool|None=None):
  settings=settings or (Settings.from_env() if database is None else Settings(str(database),"test-secret-that-is-at-least-32-bytes"));db=Database(database or settings.database_url)
  if initialize is True or (initialize is None and (database is not None or settings.auto_create_schema)): db.initialize()
@@ -38,6 +44,19 @@ def create_app(database=None,settings:Settings|None=None,initialize:bool|None=No
   except ValueError as exc: raise HTTPException(409,str(exc))
  @app.get("/cases/overdue")
  def overdue(actor:Principal=Depends(current)): require(actor,"case:read");return svc(actor).overdue()
+ @app.put("/sources/{source_id}")
+ def register_source(source_id:str,item:SourceContractIn,actor:Principal=Depends(current)):
+  require(actor,"source:admin")
+  if not source_id or len(source_id)>100 or not source_id.replace("-","").replace("_","").isalnum():raise HTTPException(422,"invalid source_id")
+  return svc(actor).register_source(source_id,item.principal_subject,item.max_silence_seconds,item.enabled)
+ @app.post("/sources/{source_id}/result")
+ def source_result(source_id:str,item:SourceResultIn,actor:Principal=Depends(current)):
+  require(actor,"source:heartbeat")
+  if item.success and item.error_code is not None:raise HTTPException(422,"successful source result cannot include error_code")
+  if not item.success and item.error_code is None:raise HTTPException(422,"failed source result requires error_code")
+  try:return svc(actor).record_source_result(source_id,actor.subject,item.success,item.error_code)
+  except PermissionError as exc:raise HTTPException(403,str(exc))
+  except ValueError as exc:raise HTTPException(404,str(exc))
  @app.get("/health/ready")
  def ready():
   with db.connect() as conn: conn.exec_driver_sql("SELECT 1")

@@ -7,6 +7,7 @@ from .operation_metrics import record_operation
 from .settings import Settings
 from .preflight import PreflightError,run_preflight
 from .admission import verify_admission
+from .business_metrics import collect_business_health,write_business_metrics
 def main():
  parser=argparse.ArgumentParser(prog="auditmesh-operations");sub=parser.add_subparsers(dest="command",required=True)
  create=sub.add_parser("backup-create");create.add_argument("path")
@@ -14,6 +15,7 @@ def main():
  verify=sub.add_parser("evidence-verify");verify.add_argument("--tenant")
  sub.add_parser("preflight")
  admission=sub.add_parser("admission-verify");admission.add_argument("evidence_file");admission.add_argument("--release-sha",required=True);admission.add_argument("--max-age-hours",type=int,default=168)
+ sub.add_parser("business-status-export")
  args=parser.parse_args()
  operation=args.command.replace("-","_");metric_dir=os.getenv("AUDITMESH_TEXTFILE_DIR","");metric_path=Path(metric_dir)/f"auditmesh_{operation}.prom" if metric_dir else None
  try:
@@ -28,6 +30,9 @@ def main():
     if args.command=="preflight":
      try:result=run_preflight(settings,os.getenv("AUDITMESH_BACKUP_KEY_BASE64",""))
      except PreflightError as exc:result={"valid":False,"error":str(exc)}
+    elif args.command=="business-status-export":
+     if not metric_dir:raise RuntimeError("AUDITMESH_TEXTFILE_DIR is required for business-status-export")
+     result=collect_business_health(db);write_business_metrics(Path(metric_dir)/"auditmesh_business.prom",result)
     elif args.command=="backup-create":result=create_backup(db,args.path)
     elif args.command=="backup-restore":result=restore_backup(Database(args.target_url),args.path)
     else:
