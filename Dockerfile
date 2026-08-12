@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.13.15-slim
 WORKDIR /app
 RUN addgroup --system auditmesh && adduser --system --ingroup auditmesh --home /app auditmesh
 COPY pyproject.toml ./

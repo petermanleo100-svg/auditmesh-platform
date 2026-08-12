@@ -19,7 +19,7 @@
 | Enterprise identity | OIDC/JWKS RS256/ES256, issuer/audience/expiry/role/tenant validation and 5-minute key cache; negative matrix |
 | Auth downgrade control | production defaults OIDC; HMAC requires explicit exception; fail-closed settings tests |
 | Actionable observability | versioned Prometheus 5xx, p95 latency and readiness alerts; `promtool` CI validation; routing is deployment-specific |
-| Container supply-chain evidence | SPDX JSON SBOM for the built image; commit-pinned fixed-critical vulnerability gate and retained CI artifact |
+| Container supply-chain evidence | SPDX JSON SBOM, Python dependency audit and fixable High/Critical image vulnerability gate; commit-pinned actions, retained CI artifact and an expiring, source-checked exception for CPython `CVE-2026-15308` because the affected HTML parser is outside the service path |
 | Verifiable image release path | manual candidate archive with checksum/SBOM/attestations; SemVer tags publish digest-addressed GHCR images with provenance and SBOM attestations; formal publication remains tag-controlled |
 | Environment admission preflight | fail-closed production config, runtime role privilege/ownership checks, exact Alembic revision, forced RLS and 32-byte backup-key validation; PostgreSQL positive/owner-negative integration test and full Compose readiness smoke job |
 | Repository security governance | protected `main`, strict required CI/CodeQL checks, enforced administrators, linear history, resolved discussions, no force-push/delete, secret scanning/push protection and Dependabot security updates; live GitHub protection/security API audit, rechecked at release |
