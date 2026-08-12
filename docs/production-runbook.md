@@ -30,6 +30,8 @@ Use `auditmesh-operations` for backup, restore and evidence verification; schedu
 
 Load `deploy/prometheus/auditmesh-alerts.yml` into the approved Prometheus-compatible backend and route critical/warning severities to named owners. CI validates rule syntax with `promtool`; notification delivery remains an environment acceptance test. Container CI retains an SPDX JSON SBOM for 30 days and blocks vulnerabilities that are both Critical and have a known fix. Unfixed findings require explicit release risk review.
 
+The `release-image` workflow has two modes. Manual dispatch creates a 14-day candidate image archive, checksum and SBOM, then records GitHub provenance and SBOM attestations without publishing a registry image. A `vX.Y.Z` tag publishes only that immutable commit to `ghcr.io/<owner>/auditmesh-platform`, records the registry digest, and attaches provenance plus SBOM attestations. Complete the release checklist before tagging; verify the published image with `gh attestation verify oci://ghcr.io/<owner>/auditmesh-platform:vX.Y.Z -R <owner>/auditmesh-platform`.
+
 The API database role must be `NOSUPERUSER NOBYPASSRLS` and must not own tables. A separate migration owner installs forced RLS. Each transaction sets `app.tenant_id`; direct SQL attack tests prove another tenant's rows remain invisible and unmodifiable.
 
 Production authentication defaults to `AUDITMESH_AUTH_MODE=oidc`; configure an HTTPS issuer/JWKS endpoint and exact audience. `kid`-selected signing keys cache for five minutes. HMAC is a controlled pilot exception requiring `AUDITMESH_ALLOW_HMAC_PRODUCTION=true`, a named risk owner and expiry date.

@@ -13,6 +13,7 @@
 - 2 MiB 请求限制、严格字段边界、统一数据库错误、结构化访问日志和管理员完整性接口。
 - 生产默认 OIDC/JWKS（RS256/ES256、5 分钟密钥缓存）；HS256 仅允许显式受控例外。
 - 版本化 Prometheus 告警规则经 `promtool` 校验；容器 CI 生成 SPDX SBOM，并阻断已有修复的 Critical 漏洞。
+- 手动发布候选保留镜像归档、校验和、SBOM 与 GitHub attestations；仅 `vX.Y.Z` 标签可发布带不可变摘要和来源证明的 GHCR 镜像。
 
 ```bash
 pip install -e ".[test]"

@@ -20,3 +20,4 @@
 | Auth downgrade control | production defaults OIDC; HMAC requires explicit exception; fail-closed settings tests |
 | Actionable observability | versioned Prometheus 5xx, p95 latency and readiness alerts; `promtool` CI validation; routing is deployment-specific |
 | Container supply-chain evidence | SPDX JSON SBOM for the built image; commit-pinned fixed-critical vulnerability gate and retained CI artifact |
+| Verifiable image release path | manual candidate archive with checksum/SBOM/attestations; SemVer tags publish digest-addressed GHCR images with provenance and SBOM attestations; formal publication remains tag-controlled |
