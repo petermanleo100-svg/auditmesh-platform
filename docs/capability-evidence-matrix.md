@@ -18,7 +18,7 @@
 | Operability | structured request log, admin integrity API and operations CLI tests |
 | Enterprise identity | OIDC/JWKS RS256/ES256, issuer/audience/expiry/role/tenant validation and 5-minute key cache; negative matrix |
 | Auth downgrade control | production defaults OIDC; HMAC requires explicit exception; fail-closed settings tests |
-| Actionable observability | versioned Prometheus 5xx, p95 latency and readiness alerts with service/owner/runbook routing labels; CI syntax validation and synthetic `promtool test rules` firing drills; receiver credentials and delivery are deployment-specific |
+| Actionable observability | versioned API alerts plus atomic textfile metrics for scheduled backup/evidence operations, preserving last-success time on failure; unit/CLI tests and synthetic `promtool` firing drills cover API, operation failure and stale backup; collector mounting, receiver credentials and delivery are deployment-specific |
 | Container supply-chain evidence | SPDX JSON SBOM, Python dependency audit and fixable High/Critical image vulnerability gate; commit-pinned actions, retained CI artifact and an expiring, source-checked exception for CPython `CVE-2026-15308` because the affected HTML parser is outside the service path |
 | Verifiable image release path | manual candidate archive with checksum/SBOM/attestations; SemVer tags publish digest-addressed GHCR images with provenance and SBOM attestations; formal publication remains tag-controlled |
 | Environment admission preflight | fail-closed production config, runtime role privilege/ownership checks, exact Alembic revision, forced RLS and 32-byte backup-key validation; PostgreSQL positive/owner-negative integration test and full Compose readiness smoke job |

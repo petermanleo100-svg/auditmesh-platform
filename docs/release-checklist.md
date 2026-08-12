@@ -9,13 +9,13 @@
 - [ ] PostgreSQL isolated-schema latest-revision rollback/re-upgrade CI passes with business-row preservation and restored forced RLS; repeat migration rollback and backup restore against the production-like staging copy.
 - [ ] Runtime database role is non-owner/NOBYPASSRLS and direct SQL RLS attacks are rejected.
 - [ ] Cross-tenant attacks, 24-way duplicate delivery, concurrent transitions and self-closure gates pass.
-- [ ] Critical overdue, readiness, ingestion error and source-gap alerts reach named owners.
+- [ ] Node Exporter (or equivalent) scrapes `AUDITMESH_TEXTFILE_DIR`; scheduled backup/evidence failures and stale backup alerts fire, while environment critical-overdue/readiness/ingestion/source-gap alerts reach named owners.
 - [ ] A synthetic case completes OPEN through independent CLOSED before real evidence is admitted.
 - [ ] Oversize/invalid events and injected database failures pass negative tests without detail leakage.
 - [ ] Scheduled `evidence-verify` and backup jobs use separate least-privileged operational identities.
 - [ ] OIDC issuer/audience/roles/tenant mappings and signing-key rotation are tested; no unapproved HMAC exception remains.
 - [ ] Encrypted restore runs into an empty, exact-revision PostgreSQL schema and retained raw-event hashes recompute successfully.
-- [ ] CI `promtool` syntax and synthetic firing tests pass for readiness, 5xx and p95 latency; a real test notification reaches each named owner in the deployment environment.
+- [ ] CI `promtool` syntax and synthetic firing tests pass for readiness, 5xx, p95 latency, operation failure and stale backup; a real test notification reaches each named owner in the deployment environment.
 - [ ] `pip-audit` passes; the release commit has a retained SPDX image SBOM and no unexcepted fixable High/Critical vulnerability. Review the sole time-bounded `CVE-2026-15308` not-affected record and confirm `html.parser` remains outside executable source.
 - [ ] Candidate archive checksum and both GitHub attestations verify before a SemVer tag is approved.
 - [ ] Tagged GHCR image resolves to the recorded immutable digest and provenance/SBOM attestations verify.
