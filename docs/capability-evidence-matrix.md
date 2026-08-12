@@ -18,3 +18,5 @@
 | Operability | structured request log, admin integrity API and operations CLI tests |
 | Enterprise identity | OIDC/JWKS RS256/ES256, issuer/audience/expiry/role/tenant validation and 5-minute key cache; negative matrix |
 | Auth downgrade control | production defaults OIDC; HMAC requires explicit exception; fail-closed settings tests |
+| Actionable observability | versioned Prometheus 5xx, p95 latency and readiness alerts; `promtool` CI validation; routing is deployment-specific |
+| Container supply-chain evidence | SPDX JSON SBOM for the built image; commit-pinned fixed-critical vulnerability gate and retained CI artifact |

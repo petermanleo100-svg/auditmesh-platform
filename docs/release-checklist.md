@@ -13,3 +13,5 @@
 - [ ] Scheduled `evidence-verify` and backup jobs use separate least-privileged operational identities.
 - [ ] OIDC issuer/audience/roles/tenant mappings and signing-key rotation are tested; no unapproved HMAC exception remains.
 - [ ] Encrypted restore runs into an empty, exact-revision PostgreSQL schema and retained raw-event hashes recompute successfully.
+- [ ] `promtool` validates alert rules, and a test notification reaches each named owner in the deployment environment.
+- [ ] The release commit has a retained SPDX image SBOM and no fixed Critical vulnerability blocked by CI.

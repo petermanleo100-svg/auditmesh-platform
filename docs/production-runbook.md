@@ -28,6 +28,8 @@ PostgreSQL event intake uses the `(tenant_id, event_id)` unique key with a datab
 
 Use `auditmesh-operations` for backup, restore and evidence verification; schedule `evidence-verify` and page on non-zero exit. The API rejects bodies over 2 MiB and bounds identity/control fields. Structured JSON access logs carry the response request ID for trace correlation.
 
+Load `deploy/prometheus/auditmesh-alerts.yml` into the approved Prometheus-compatible backend and route critical/warning severities to named owners. CI validates rule syntax with `promtool`; notification delivery remains an environment acceptance test. Container CI retains an SPDX JSON SBOM for 30 days and blocks vulnerabilities that are both Critical and have a known fix. Unfixed findings require explicit release risk review.
+
 The API database role must be `NOSUPERUSER NOBYPASSRLS` and must not own tables. A separate migration owner installs forced RLS. Each transaction sets `app.tenant_id`; direct SQL attack tests prove another tenant's rows remain invisible and unmodifiable.
 
 Production authentication defaults to `AUDITMESH_AUTH_MODE=oidc`; configure an HTTPS issuer/JWKS endpoint and exact audience. `kid`-selected signing keys cache for five minutes. HMAC is a controlled pilot exception requiring `AUDITMESH_ALLOW_HMAC_PRODUCTION=true`, a named risk owner and expiry date.
