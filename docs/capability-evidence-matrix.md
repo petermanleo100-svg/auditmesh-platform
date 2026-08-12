@@ -5,10 +5,11 @@
 | Atomic idempotent event ingestion | PostgreSQL `ON CONFLICT DO NOTHING` makes 24 concurrent deliveries return the same single case |
 | Case governance | legal lifecycle, optimistic version and four-eyes closure tests |
 | SLA operations | overdue case test |
+| Source health contracts | tenant-scoped source registration binds connector token subject to a bounded silence window and authenticated success/failure reports; API impersonation/validation tests and PostgreSQL direct-SQL RLS attack test |
 | Deployability | API test, non-root image and CI |
 | Auth and tenant binding | signed audit roles; scope/cross-tenant API test |
 | Operations | request ID, metrics, probes and security headers test |
-| Schema lifecycle | SQLite full-chain round trip plus PostgreSQL isolated-schema latest-revision downgrade/re-upgrade with business-row preservation and RLS-state verification |
+| Schema lifecycle | SQLite full-chain round trip plus PostgreSQL isolated-schema latest-revision downgrade/re-upgrade with business-row preservation and RLS-state verification, including the source-contract table |
 | Enterprise pilot | hardened PostgreSQL Compose, runbook and CI jobs |
 | Database tenant defense | PostgreSQL FORCE RLS and transaction tenant context; direct SQL attack test |
 | Verifiable evidence | canonical raw event retained; recomputation detects mutation |
@@ -18,7 +19,7 @@
 | Operability | structured request log, admin integrity API and operations CLI tests |
 | Enterprise identity | OIDC/JWKS RS256/ES256, issuer/audience/expiry/role/tenant validation and 5-minute key cache; negative matrix |
 | Auth downgrade control | production defaults OIDC; HMAC requires explicit exception; fail-closed settings tests |
-| Actionable observability | versioned API alerts plus atomic textfile metrics for scheduled backup/evidence operations, preserving last-success time on failure; unit/CLI tests and synthetic `promtool` firing drills cover API, operation failure and stale backup; collector mounting, receiver credentials and delivery are deployment-specific |
+| Actionable observability | versioned API alerts plus atomic textfile metrics for scheduled backup/evidence/business-health operations, preserving last-success time on failure; low-cardinality gauges cover critical overdue cases, current source failures and source gaps; unit/CLI tests and synthetic `promtool` firing drills cover API, operation/exporter failure, stale backup and business states; collector mounting, cross-tenant operations identity, receiver credentials and delivery are deployment-specific |
 | Container supply-chain evidence | SPDX JSON SBOM, Python dependency audit and fixable High/Critical image vulnerability gate; commit-pinned actions, retained CI artifact and an expiring, source-checked exception for CPython `CVE-2026-15308` because the affected HTML parser is outside the service path |
 | Verifiable image release path | manual candidate archive with checksum/SBOM/attestations; SemVer tags publish digest-addressed GHCR images with provenance and SBOM attestations; formal publication remains tag-controlled |
 | Environment admission preflight | fail-closed production config, runtime role privilege/ownership checks, exact Alembic revision, forced RLS and 32-byte backup-key validation; PostgreSQL positive/owner-negative integration test and full Compose readiness smoke job |

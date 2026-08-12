@@ -27,3 +27,10 @@ class CaseTransition(Base):
     from_status:Mapped[str]=mapped_column(String(20),nullable=False); to_status:Mapped[str]=mapped_column(String(20),nullable=False)
     actor:Mapped[str]=mapped_column(String(100),nullable=False); reason:Mapped[str]=mapped_column(Text,nullable=False)
     occurred_at:Mapped[str]=mapped_column(String(40),nullable=False)
+class SourceContract(Base):
+    __tablename__="source_contracts";id:Mapped[int]=mapped_column(Integer,primary_key=True)
+    tenant_id:Mapped[str]=mapped_column(String(64),nullable=False,index=True);source_id:Mapped[str]=mapped_column(String(100),nullable=False)
+    principal_subject:Mapped[str]=mapped_column(String(200),nullable=False);max_silence_seconds:Mapped[int]=mapped_column(Integer,nullable=False)
+    enabled:Mapped[int]=mapped_column(Integer,nullable=False,default=1);last_success_at:Mapped[str|None]=mapped_column(String(40));last_failure_at:Mapped[str|None]=mapped_column(String(40))
+    last_error_code:Mapped[str|None]=mapped_column(String(50));updated_at:Mapped[str]=mapped_column(String(40),nullable=False)
+    __table_args__=(UniqueConstraint("tenant_id","source_id"),)

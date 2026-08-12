@@ -5,9 +5,9 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from sqlalchemy import inspect,insert,select,text
 from .core import Database,canonical,digest,now
 from .integrity import verify_evidence
-from .models import AuditCase,CaseTransition,ControlEvent,ControlPolicy
-TABLES=(ControlEvent,ControlPolicy,AuditCase,CaseTransition)
-SCHEMA_REVISION="20260812_0003"
+from .models import AuditCase,CaseTransition,ControlEvent,ControlPolicy,SourceContract
+TABLES=(ControlEvent,ControlPolicy,AuditCase,CaseTransition,SourceContract)
+SCHEMA_REVISION="20260813_0004"
 def _key(value=None):
  raw=value or os.getenv("AUDITMESH_BACKUP_KEY_BASE64","")
  try:key=base64.b64decode(raw,validate=True)

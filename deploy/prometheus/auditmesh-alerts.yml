@@ -46,3 +46,23 @@ groups:
         for: 5m
         labels: {severity: critical, service: auditmesh, owner: platform-operations}
         annotations: {summary: "AuditMesh has no successful backup inside the 15-minute RPO window", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
+      - alert: AuditMeshCriticalCaseOverdue
+        expr: auditmesh_critical_overdue_cases > 0
+        for: 5m
+        labels: {severity: critical, service: auditmesh, owner: control-operations}
+        annotations: {summary: "AuditMesh has one or more overdue critical cases", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
+      - alert: AuditMeshSourceIngestionFailed
+        expr: auditmesh_source_current_failures > 0
+        for: 5m
+        labels: {severity: critical, service: auditmesh, owner: integration-operations}
+        annotations: {summary: "AuditMesh has one or more sources whose latest ingestion result failed", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
+      - alert: AuditMeshSourceGap
+        expr: auditmesh_source_gap_count > 0
+        for: 5m
+        labels: {severity: critical, service: auditmesh, owner: integration-operations}
+        annotations: {summary: "AuditMesh has one or more sources beyond their heartbeat silence contract", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
+      - alert: AuditMeshBusinessStatusExporterStale
+        expr: (time() - auditmesh_operation_last_success_timestamp_seconds{operation="business_status_export"} > 600) or absent(auditmesh_operation_last_success_timestamp_seconds{operation="business_status_export"})
+        for: 5m
+        labels: {severity: critical, service: auditmesh, owner: platform-operations}
+        annotations: {summary: "AuditMesh business status metrics are missing or older than ten minutes", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}

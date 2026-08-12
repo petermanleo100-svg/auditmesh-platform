@@ -43,3 +43,11 @@ def test_database_failures_are_sanitized(tmp_path,monkeypatch):
  def fail(*_args,**_kwargs):raise OperationalError("SELECT secret",{},RuntimeError("password=do-not-leak"))
  monkeypatch.setattr(AuditMeshService,"ingest",fail);token=issue_token(settings,"collector","alpha",["collector"]);response=c.post("/events",json=event(),headers={"Authorization":f"Bearer {token}"})
  assert response.status_code==503 and response.json()=={"detail":"database operation failed"} and "password" not in response.text
+def test_source_contract_binds_heartbeat_to_collector_subject(tmp_path):
+ settings=Settings(str(tmp_path/"sources.db"),"test-secret-that-is-at-least-32-bytes",environment="test");c=TestClient(create_app(settings=settings,initialize=True))
+ def h(user,role):return {"Authorization":f"Bearer {issue_token(settings,user,'alpha',[role])}"}
+ created=c.put("/sources/erp_prod",json={"principal_subject":"collector-alpha","max_silence_seconds":300},headers=h("admin","admin"));assert created.status_code==200
+ assert c.post("/sources/erp_prod/result",json={"success":False,"error_code":"TIMEOUT"},headers=h("attacker","collector")).status_code==403
+ assert c.post("/sources/erp_prod/result",json={"success":False},headers=h("collector-alpha","collector")).status_code==422
+ success=c.post("/sources/erp_prod/result",json={"success":True},headers=h("collector-alpha","collector"));assert success.status_code==200 and success.json()["success"] is True
+ assert c.put("/sources/erp_prod",json={"principal_subject":"collector-alpha","max_silence_seconds":1},headers=h("admin","admin")).status_code==422

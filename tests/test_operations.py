@@ -20,3 +20,10 @@ def test_admission_cli_fails_closed_without_runtime_database_config(tmp_path,mon
  evidence=tmp_path/"evidence.json";evidence.write_text("{}",encoding="utf-8");monkeypatch.setattr(sys,"argv",["auditmesh-operations","admission-verify",str(evidence),"--release-sha","a"*40])
  with pytest.raises(SystemExit,match="2"):operations.main()
  assert json.loads(capsys.readouterr().out)["valid"] is False
+def test_business_status_cli_writes_business_and_freshness_metrics(tmp_path,monkeypatch,capsys):
+ metrics=tmp_path/"metrics";monkeypatch.setenv("AUDITMESH_TEXTFILE_DIR",str(metrics));monkeypatch.setattr(operations.Settings,"from_env",lambda:SimpleNamespace(database_url="sqlite://"));monkeypatch.setattr(operations,"Database",lambda _url:object());monkeypatch.setattr(operations,"collect_business_health",lambda _db:{"critical_overdue":1,"source_failures":2,"source_gaps":3,"enabled_sources":4});monkeypatch.setattr(sys,"argv",["auditmesh-operations","business-status-export"])
+ with pytest.raises(SystemExit,match="0"):operations.main()
+ assert json.loads(capsys.readouterr().out)["source_gaps"]==3 and "auditmesh_source_gap_count 3" in (metrics/"auditmesh_business.prom").read_text() and 'operation="business_status_export"' in (metrics/"auditmesh_business_status_export.prom").read_text()
+def test_business_status_cli_fails_closed_without_metric_directory(monkeypatch):
+ monkeypatch.delenv("AUDITMESH_TEXTFILE_DIR",raising=False);monkeypatch.setattr(operations.Settings,"from_env",lambda:SimpleNamespace(database_url="sqlite://"));monkeypatch.setattr(operations,"Database",lambda _url:object());monkeypatch.setattr(sys,"argv",["auditmesh-operations","business-status-export"])
+ with pytest.raises(RuntimeError,match="TEXTFILE_DIR"):operations.main()

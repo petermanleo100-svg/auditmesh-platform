@@ -10,13 +10,13 @@
 - [ ] PostgreSQL isolated-schema latest-revision rollback/re-upgrade CI passes with business-row preservation and restored forced RLS; repeat migration rollback and backup restore against the production-like staging copy.
 - [ ] Runtime database role is non-owner/NOBYPASSRLS and direct SQL RLS attacks are rejected.
 - [ ] Cross-tenant attacks, 24-way duplicate delivery, concurrent transitions and self-closure gates pass.
-- [ ] Node Exporter (or equivalent) scrapes `AUDITMESH_TEXTFILE_DIR`; scheduled backup/evidence failures and stale backup alerts fire, while environment critical-overdue/readiness/ingestion/source-gap alerts reach named owners.
+- [ ] Every source is registered with an approved collector `sub` and silence window; success/failure reports reject an impersonating collector. A separate audited cross-tenant operations identity runs `business-status-export` at least every five minutes. Node Exporter scrapes `AUDITMESH_TEXTFILE_DIR`; scheduled backup/evidence/export failures, exporter staleness, stale backup, critical-overdue, readiness, ingestion-failure and source-gap alerts reach their named owners.
 - [ ] A synthetic case completes OPEN through independent CLOSED before real evidence is admitted.
 - [ ] Oversize/invalid events and injected database failures pass negative tests without detail leakage.
 - [ ] Scheduled `evidence-verify` and backup jobs use separate least-privileged operational identities.
 - [ ] OIDC issuer/audience/roles/tenant mappings and signing-key rotation are tested; no unapproved HMAC exception remains.
 - [ ] Encrypted restore runs into an empty, exact-revision PostgreSQL schema and retained raw-event hashes recompute successfully.
-- [ ] CI `promtool` syntax and synthetic firing tests pass for readiness, 5xx, p95 latency, operation failure and stale backup; a real test notification reaches each named owner in the deployment environment.
+- [ ] CI `promtool` syntax and synthetic firing tests pass for readiness, 5xx, p95 latency, operation failure, stale backup, exporter staleness, critical overdue, current source failure and source gap; a real test notification reaches each named owner in the deployment environment.
 - [ ] `pip-audit` passes; the release commit has a retained SPDX image SBOM and no unexcepted fixable High/Critical vulnerability. Review the sole time-bounded `CVE-2026-15308` not-affected record and confirm `html.parser` remains outside executable source.
 - [ ] Candidate archive checksum and both GitHub attestations verify before a SemVer tag is approved.
 - [ ] Tagged GHCR image resolves to the recorded immutable digest and provenance/SBOM attestations verify.

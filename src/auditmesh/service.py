@@ -3,7 +3,7 @@ from datetime import datetime,timedelta,timezone
 from sqlalchemy import insert,select,update
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from .core import Database,canonical,digest,now
-from .models import AuditCase,CaseTransition,ControlEvent,ControlPolicy
+from .models import AuditCase,CaseTransition,ControlEvent,ControlPolicy,SourceContract
 
 DEFAULT_POLICIES=[
  {"policy_code":"PRIVILEGED_AFTER_HOURS","version":1,"event_type":"PRIVILEGED_ACTION","field":"approved","operator":"eq","value":False,"severity":"HIGH","sla_hours":4,"message":"未审批特权操作"},
@@ -56,3 +56,22 @@ class AuditMeshService:
  def overdue(self,at=None):
   point=at or now()
   with self.db.connect(self.tenant_id) as conn: return [dict(r) for r in conn.execute(select(AuditCase).where(AuditCase.tenant_id==self.tenant_id,AuditCase.status!="CLOSED",AuditCase.due_at<point)).mappings()]
+ def register_source(self,source_id,principal_subject,max_silence_seconds,enabled=True):
+  timestamp=now()
+  with self.db.connect(self.tenant_id) as conn:
+   row=conn.execute(select(SourceContract.id).where(SourceContract.tenant_id==self.tenant_id,SourceContract.source_id==source_id)).scalar_one_or_none()
+   values={"principal_subject":principal_subject,"max_silence_seconds":max_silence_seconds,"enabled":1 if enabled else 0,"updated_at":timestamp}
+   if row is None:conn.execute(insert(SourceContract).values(tenant_id=self.tenant_id,source_id=source_id,**values))
+   else:conn.execute(update(SourceContract).where(SourceContract.id==row).values(**values))
+  return {"source_id":source_id,"principal_subject":principal_subject,"max_silence_seconds":max_silence_seconds,"enabled":enabled}
+ def record_source_result(self,source_id,principal_subject,success,error_code=None):
+  timestamp=now()
+  with self.db.connect(self.tenant_id) as conn:
+   row=conn.execute(select(SourceContract).where(SourceContract.tenant_id==self.tenant_id,SourceContract.source_id==source_id,SourceContract.enabled==1)).mappings().one_or_none()
+   if row is None:raise ValueError("unknown or disabled source")
+   if row["principal_subject"]!=principal_subject:raise PermissionError("source identity does not match registered principal")
+   values={"updated_at":timestamp}
+   if success:values.update(last_success_at=timestamp,last_error_code=None)
+   else:values.update(last_failure_at=timestamp,last_error_code=error_code)
+   conn.execute(update(SourceContract).where(SourceContract.id==row["id"]).values(**values))
+  return {"source_id":source_id,"success":success,"recorded_at":timestamp}

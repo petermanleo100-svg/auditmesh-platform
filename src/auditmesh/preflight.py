@@ -9,12 +9,13 @@ from .core import Database
 from .settings import Settings
 
 
-EXPECTED_REVISION = "20260812_0003"
+EXPECTED_REVISION = "20260813_0004"
 TENANT_TABLES = (
     "control_events",
     "control_policies",
     "audit_cases",
     "case_transitions",
+    "source_contracts",
 )
 
 
@@ -110,4 +111,3 @@ def run_preflight(settings: Settings, backup_key_base64: str) -> dict:
         tenant_tables=len(TENANT_TABLES),
         auth_mode=settings.auth_mode,
     ).as_dict()
-
