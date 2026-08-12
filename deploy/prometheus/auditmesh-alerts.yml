@@ -37,7 +37,7 @@ groups:
         labels: {severity: critical, service: auditmesh, owner: platform-operations}
         annotations: {summary: "AuditMesh scheduled operation failed", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
       - alert: AuditMeshBackupStale
-        expr: time() - auditmesh_operation_last_success_timestamp_seconds{operation="backup_create"} > 900
+        expr: (time() - auditmesh_operation_last_success_timestamp_seconds{operation="backup_create"} > 900) or absent(auditmesh_operation_last_success_timestamp_seconds{operation="backup_create"})
         for: 5m
         labels: {severity: critical, service: auditmesh, owner: platform-operations}
         annotations: {summary: "AuditMesh has no successful backup inside the 15-minute RPO window", runbook_url: "https://github.com/petermanleo100-svg/auditmesh-platform/blob/main/docs/production-runbook.md"}
