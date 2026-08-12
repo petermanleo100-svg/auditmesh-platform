@@ -22,7 +22,9 @@
 
 During an incident, stop the affected collector, preserve raw evidence and database snapshots, revoke credentials, establish the last trusted event offset, replay idempotently into isolation, and require audit-owner approval before reopening case operations.
 
-Portable backups use `auditmesh.backup`, AES-256-GCM and a secret-manager supplied 32-byte base64 key. Restore only into an empty database; the restore gate recomputes every retained canonical raw-event hash. Managed PostgreSQL PITR remains mandatory and both restore paths should be rehearsed quarterly.
+Portable backups use `auditmesh.backup`, AES-256-GCM and a secret-manager supplied 32-byte base64 key. Restore only into an empty database already migrated to the exact application Alembic revision; restore never creates or upgrades schema implicitly. The gate recomputes every retained canonical raw-event hash. PostgreSQL CI migrates a clean schema and performs the encrypted restore. Managed PostgreSQL PITR remains mandatory and both restore paths should be rehearsed quarterly.
+
+PostgreSQL event intake uses the `(tenant_id, event_id)` unique key with a database-native conflict path. Concurrent retries for the same event return the same case rather than surfacing a uniqueness failure; source connectors must preserve a stable event ID across retries.
 
 Use `auditmesh-operations` for backup, restore and evidence verification; schedule `evidence-verify` and page on non-zero exit. The API rejects bodies over 2 MiB and bounds identity/control fields. Structured JSON access logs carry the response request ID for trace correlation.
 

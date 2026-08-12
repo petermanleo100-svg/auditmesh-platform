@@ -2,7 +2,7 @@
 | Capability | Evidence |
 |---|---|
 | Versioned policy-as-code | default policy installation and detection test |
-| Idempotent event ingestion | repeated event returns existing case |
+| Atomic idempotent event ingestion | PostgreSQL `ON CONFLICT DO NOTHING` makes 24 concurrent deliveries return the same single case |
 | Case governance | legal lifecycle, optimistic version and four-eyes closure tests |
 | SLA operations | overdue case test |
 | Deployability | API test, non-root image and CI |
@@ -12,7 +12,7 @@
 | Enterprise pilot | hardened PostgreSQL Compose, runbook and CI jobs |
 | Database tenant defense | PostgreSQL FORCE RLS and transaction tenant context; direct SQL attack test |
 | Verifiable evidence | canonical raw event retained; recomputation detects mutation |
-| Backup and recovery | AES-256-GCM, empty-target restore and restored evidence verification tests |
+| Backup and recovery | AES-256-GCM, exact Alembic-revision/empty-target gates and PostgreSQL clean-schema restore with evidence recomputation |
 | Runtime abuse controls | 2 MiB body and bounded event/transition fields; oversize/invalid tests |
 | Safe failure boundary | centralized SQLAlchemy 503; injected database failure leak test |
 | Operability | structured request log, admin integrity API and operations CLI tests |
